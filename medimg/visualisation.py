@@ -117,3 +117,73 @@ def print_metrics_table(results, row_params, I0_levels, row_label="Angles"):
                     f"{m['RMSE']:>8.4f} | {m['PSNR']:>8.2f} | "
                     f"{m['SSIM']:>8.4f}"
                 )
+
+
+def plot_coil_grid(images, n_coils, cmap="gray", log_scale=False,
+                   title="", label="Coil"):
+    """Plot a grid of per-coil 2D images.
+
+    Parameters
+    ----------
+    images : np.ndarray
+        Array of shape ``(n_coils, H, W)``.
+    n_coils : int
+        Number of coils to plot.
+    cmap : str
+        Matplotlib colourmap name.
+    log_scale : bool
+        If True, apply ``np.log1p(np.abs(...))`` before display.
+    title : str
+        Figure super-title.
+    label : str
+        Label prefix for each subplot title.
+    """
+    ncols = min(n_coils, 3)
+    nrows = int(np.ceil(n_coils / ncols))
+    fig, axes = plt.subplots(nrows, ncols, figsize=(5 * ncols, 5 * nrows))
+    axes = np.atleast_2d(axes)
+
+    for i in range(n_coils):
+        ax = axes[i // ncols, i % ncols]
+        data = np.abs(images[i])
+        if log_scale:
+            data = np.log1p(data)
+        im = ax.imshow(data, cmap=cmap)
+        ax.set_title(f"{label} {i}")
+        ax.axis("off")
+        fig.colorbar(im, ax=ax, fraction=0.046)
+
+    # Hide unused axes
+    for i in range(n_coils, nrows * ncols):
+        axes[i // ncols, i % ncols].axis("off")
+
+    if title:
+        plt.suptitle(title, fontsize=14, y=1.01)
+    plt.tight_layout()
+    plt.show()
+
+
+def plot_magnitude_phase(image, title_prefix=""):
+    """Plot magnitude and phase of a complex image side by side.
+
+    Parameters
+    ----------
+    image : np.ndarray
+        2D complex-valued image.
+    title_prefix : str
+        Prefix for subplot titles.
+    """
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+
+    im1 = ax1.imshow(np.abs(image), cmap="gray")
+    ax1.set_title(f"{title_prefix} Magnitude")
+    ax1.axis("off")
+    fig.colorbar(im1, ax=ax1, fraction=0.046)
+
+    im2 = ax2.imshow(np.angle(image), cmap="twilight", vmin=-np.pi, vmax=np.pi)
+    ax2.set_title(f"{title_prefix} Phase")
+    ax2.axis("off")
+    fig.colorbar(im2, ax=ax2, fraction=0.046)
+
+    plt.tight_layout()
+    plt.show()
