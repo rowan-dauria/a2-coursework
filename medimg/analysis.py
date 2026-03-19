@@ -5,6 +5,10 @@ import time
 import numpy as np
 from skimage.metrics import peak_signal_noise_ratio as psnr
 from skimage.metrics import structural_similarity as ssim
+from scipy.ndimage import gaussian_filter as _gaussian_filter
+from scipy.ndimage import rotate as _rotate
+from scipy.ndimage import uniform_filter as _uniform_filter
+from skimage.restoration import denoise_wavelet as _denoise_wavelet
 from skimage.transform import iradon, radon
 
 
@@ -228,20 +232,22 @@ def reconstruct_os_sart(sinogram, theta, image_shape, n_iter=50,
 def kspace_to_image(kspace_2d: np.ndarray) -> np.ndarray:
     """Convert a 2D k-space array to image space via inverse FFT.
 
-    Applies ``ifftshift``, 2D inverse FFT, and ``fftshift`` to centre
-    the resulting image.
+    Applies ``fftshift`` before ``ifft2`` to move the DC (zero-frequency)
+    component from the centre of k-space to index (0, 0), where NumPy's
+    FFT routines expect it.  This does not affect image magnitude but is
+    necessary for correct phase reconstruction.
 
     Parameters
     ----------
     kspace_2d : np.ndarray
-        2D complex-valued k-space data.
+        2D complex-valued k-space data with DC at the centre.
 
     Returns
     -------
     np.ndarray
         Complex-valued image.
     """
-    return np.fft.fftshift(np.fft.ifft2(np.fft.ifftshift(kspace_2d)))
+    return np.fft.ifft2(np.fft.fftshift(kspace_2d))
 
 
 def combine_coils_rss(images: np.ndarray) -> np.ndarray:
@@ -288,3 +294,117 @@ def compute_metrics(ground_truth, reconstruction):
     )
 
     return {"RMSE": rmse, "PSNR": psnr_val, "SSIM": ssim_val}
+
+
+def rotate_image(image, degrees, reshape=False):
+    """Rotate an image clockwise by a given number of degrees.
+
+    Parameters
+    ----------
+    image : np.ndarray
+        2D image to rotate.
+    degrees : float
+        Clockwise rotation angle in degrees.
+    reshape : bool
+        If True, resize the output to contain the full rotated image.
+        If False (default), output has the same shape as the input.
+
+    Returns
+    -------
+    np.ndarray
+        Rotated image.
+    """
+    # scipy.ndimage.rotate rotates counter-clockwise, so negate for clockwise
+    return _rotate(image, angle=-degrees, reshape=reshape)
+
+
+def denoise_mean(image, size=3):
+    """Denoise an image using a mean (uniform) filter.
+
+    Replaces each pixel with the arithmetic mean of its local neighbourhood.
+
+    Parameters
+    ----------
+    image : np.ndarray
+        2D image to denoise.
+    size : int
+        Side length of the square averaging kernel.
+
+    Returns
+    -------
+    np.ndarray
+        Denoised image.
+    """
+    return _uniform_filter(image, size=size)
+
+
+def denoise_gaussian(image, sigma=1.0):
+    """Denoise an image using a Gaussian filter.
+
+    Convolves the image with a Gaussian kernel of the given standard
+    deviation.
+
+    Parameters
+    ----------
+    image : np.ndarray
+        2D image to denoise.
+    sigma : float
+        Standard deviation of the Gaussian kernel.
+
+    Returns
+    -------
+    np.ndarray
+        Denoised image.
+    """
+    return _gaussian_filter(image, sigma=sigma)
+
+
+def denoise_wavelet_filter(image, wavelet="db1", rescale_sigma=True):
+    """Denoise an image using wavelet thresholding.
+
+    Applies BayesShrink soft-thresholding in the wavelet domain.
+
+    Parameters
+    ----------
+    image : np.ndarray
+        2D image to denoise.
+    wavelet : str
+        Wavelet basis to use (default ``'db1'``, the Haar wavelet).
+    rescale_sigma : bool
+        If True, rescale the estimated noise sigma for each wavelet level.
+
+    Returns
+    -------
+    np.ndarray
+        Denoised image.
+    """
+    return _denoise_wavelet(image, wavelet=wavelet, rescale_sigma=rescale_sigma)
+
+
+def butterworth_lowpass_filter(shape, D0=30, n=2):
+    """Create a 2D Butterworth low-pass filter mask.
+
+    The filter is centred at the middle of the array, suitable for
+    multiplication with k-space data whose DC component is at the centre.
+
+    Parameters
+    ----------
+    shape : tuple of int
+        ``(rows, cols)`` shape of the k-space array.
+    D0 : float
+        Cut-off frequency (distance from centre in pixels).
+    n : int
+        Filter order — higher values give a sharper roll-off.
+
+    Returns
+    -------
+    np.ndarray
+        2D filter mask with values in ``[0, 1]``.
+    """
+    P, Q = shape[0], shape[1]
+    u = np.arange(P) - P // 2
+    v = np.arange(Q) - Q // 2
+    U, V = np.meshgrid(u, v, indexing='ij')
+    D = np.sqrt(U**2 + V**2)
+    H = 1 / (1 + (D / D0) ** (2 * n))
+    return H

@@ -187,3 +187,41 @@ def plot_magnitude_phase(image, title_prefix=""):
 
     plt.tight_layout()
     plt.show()
+
+
+def plot_butterworth_kspace(H, kspace_filtered, kspace_original, D0=30, n=2):
+    """Plot the Butterworth filter, filtered k-space, and original k-space.
+
+    Parameters
+    ----------
+    H : np.ndarray
+        2D Butterworth filter mask.
+    kspace_filtered : np.ndarray
+        Filtered k-space data (complex).
+    kspace_original : np.ndarray
+        Original k-space data (complex).
+    D0 : float
+        Cut-off frequency used (for the title).
+    n : int
+        Filter order used (for the title).
+    """
+    fig, axes = plt.subplots(1, 3, figsize=(18, 5))
+
+    axes[0].imshow(H, cmap="gray")
+    axes[0].set_title(f"Butterworth Filter (D0={D0}, n={n})")
+    axes[0].axis("off")
+    fig.colorbar(axes[0].images[0], ax=axes[0], fraction=0.046)
+
+    axes[1].imshow(np.log1p(np.abs(kspace_filtered)), cmap="gray")
+    axes[1].set_title("Filtered K-space (log-scaled)")
+    axes[1].axis("off")
+    fig.colorbar(axes[1].images[0], ax=axes[1], fraction=0.046)
+
+    axes[2].imshow(np.log1p(np.abs(kspace_original)), cmap="gray")
+    axes[2].set_title("Original K-space (log-scaled)")
+    axes[2].axis("off")
+    fig.colorbar(axes[2].images[0], ax=axes[2], fraction=0.046)
+
+    plt.suptitle("Butterworth Low-pass Filter", fontsize=14, y=1.01)
+    plt.tight_layout()
+    plt.show()
