@@ -45,9 +45,7 @@ def complex_kspace_2d():
 def multi_coil_images():
     """Shape (4, 16, 16) complex array simulating 4 coil images."""
     rng = np.random.default_rng(42)
-    return rng.standard_normal((4, 16, 16)) + 1j * rng.standard_normal(
-        (4, 16, 16)
-    )
+    return rng.standard_normal((4, 16, 16)) + 1j * rng.standard_normal((4, 16, 16))
 
 
 @pytest.fixture(scope="session")
@@ -78,6 +76,4 @@ def ct_image_path():
 @pytest.fixture(scope="session")
 def kspace_path():
     """Path to the MRI k-space file."""
-    return os.path.join(
-        os.path.dirname(__file__), os.pardir, "data", "knee.npy"
-    )
+    return os.path.join(os.path.dirname(__file__), os.pardir, "data", "knee.npy")

@@ -18,8 +18,8 @@ from medimg.analysis import (
     rotate_image,
 )
 
-
 # ── add_noise ──────────────────────────────────────────────────────────
+
 
 class TestAddNoise:
     """Tests for add_noise."""
@@ -56,6 +56,7 @@ class TestAddNoise:
 
 # ── reconstruct_fbp ───────────────────────────────────────────────────
 
+
 class TestReconstructFBP:
     """Tests for reconstruct_fbp."""
 
@@ -68,7 +69,7 @@ class TestReconstructFBP:
         """FBP reconstruction has reasonable RMSE on small phantom."""
         recon = reconstruct_fbp(small_sinogram, theta_36)
         # Crop to match phantom size
-        recon_crop = recon[:small_image.shape[0], :small_image.shape[1]]
+        recon_crop = recon[: small_image.shape[0], : small_image.shape[1]]
         rmse = np.sqrt(np.mean((small_image - recon_crop) ** 2))
         assert rmse < 0.5
 
@@ -83,6 +84,7 @@ class TestReconstructFBP:
 
 
 # ── reconstruct_gradient_descent ──────────────────────────────────────
+
 
 class TestReconstructGD:
     """Tests for reconstruct_gradient_descent."""
@@ -117,6 +119,7 @@ class TestReconstructGD:
 
 # ── reconstruct_os_sart ──────────────────────────────────────────────
 
+
 class TestReconstructOsSart:
     """Tests for reconstruct_os_sart."""
 
@@ -143,14 +146,18 @@ class TestReconstructOsSart:
     def test_subsets(self, small_sinogram, theta_36, small_image, n_subsets):
         """Different subset counts produce valid output."""
         recon = reconstruct_os_sart(
-            small_sinogram, theta_36, small_image.shape,
-            n_iter=1, n_subsets=n_subsets,
+            small_sinogram,
+            theta_36,
+            small_image.shape,
+            n_iter=1,
+            n_subsets=n_subsets,
         )
         assert recon.shape == small_image.shape
         assert np.all(np.isfinite(recon))
 
 
 # ── kspace_to_image ──────────────────────────────────────────────────
+
 
 class TestKspaceToImage:
     """Tests for kspace_to_image."""
@@ -176,6 +183,7 @@ class TestKspaceToImage:
 
 # ── combine_coils_rss ────────────────────────────────────────────────
 
+
 class TestCombineCoilsRss:
     """Tests for combine_coils_rss."""
 
@@ -192,14 +200,13 @@ class TestCombineCoilsRss:
     def test_single_coil(self):
         """Single coil RSS equals abs(image)."""
         rng = np.random.default_rng(7)
-        single = rng.standard_normal((1, 8, 8)) + 1j * rng.standard_normal(
-            (1, 8, 8)
-        )
+        single = rng.standard_normal((1, 8, 8)) + 1j * rng.standard_normal((1, 8, 8))
         result = combine_coils_rss(single)
         np.testing.assert_allclose(result, np.abs(single[0]), atol=1e-12)
 
 
 # ── compute_metrics ──────────────────────────────────────────────────
+
 
 class TestComputeMetrics:
     """Tests for compute_metrics."""
@@ -228,6 +235,7 @@ class TestComputeMetrics:
 
 # ── rotate_image ─────────────────────────────────────────────────────
 
+
 class TestRotateImage:
     """Tests for rotate_image."""
 
@@ -251,6 +259,7 @@ class TestRotateImage:
 
 # ── denoise_mean ─────────────────────────────────────────────────────
 
+
 class TestDenoiseMean:
     """Tests for denoise_mean."""
 
@@ -268,6 +277,7 @@ class TestDenoiseMean:
 
 
 # ── denoise_gaussian ─────────────────────────────────────────────────
+
 
 class TestDenoiseGaussian:
     """Tests for denoise_gaussian."""
@@ -287,6 +297,7 @@ class TestDenoiseGaussian:
 
 # ── denoise_wavelet_filter ───────────────────────────────────────────
 
+
 class TestDenoiseWavelet:
     """Tests for denoise_wavelet_filter."""
 
@@ -304,6 +315,7 @@ class TestDenoiseWavelet:
 
 
 # ── butterworth_lowpass_filter ───────────────────────────────────────
+
 
 class TestButterworthLowpassFilter:
     """Tests for butterworth_lowpass_filter."""

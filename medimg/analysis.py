@@ -3,11 +3,11 @@
 import time
 
 import numpy as np
-from skimage.metrics import peak_signal_noise_ratio as psnr
-from skimage.metrics import structural_similarity as ssim
 from scipy.ndimage import gaussian_filter as _gaussian_filter
 from scipy.ndimage import rotate as _rotate
 from scipy.ndimage import uniform_filter as _uniform_filter
+from skimage.metrics import peak_signal_noise_ratio as psnr
+from skimage.metrics import structural_similarity as ssim
 from skimage.restoration import denoise_wavelet as _denoise_wavelet
 from skimage.transform import iradon, radon
 
@@ -77,8 +77,9 @@ def reconstruct_fbp(sinogram, theta, filter_name="ramp"):
     return iradon(sinogram, theta=theta, circle=False, filter_name=filter_name)
 
 
-def reconstruct_gradient_descent(sinogram, theta, image_shape, n_iter=50,
-                                 lr=0.01, profile=False):
+def reconstruct_gradient_descent(
+    sinogram, theta, image_shape, n_iter=50, lr=0.01, profile=False
+):
     """Reconstruct an image from a sinogram using gradient descent (SIRT-like).
 
     Minimises ``||Ax - b||^2`` where *A* is the Radon transform and *b* is the
@@ -129,26 +130,33 @@ def reconstruct_gradient_descent(sinogram, theta, image_shape, n_iter=50,
 
         # Update
         t0 = time.time()
-        # Division by n_angles is to normalise the learning rate for different number of angles
+        # Normalise learning rate by number of angles
         recon -= lr * gradient / n_angles
         t_arith_total += time.time() - t0
 
     if profile:
         total = t_radon_total + t_iradon_total + t_arith_total
         print(f"    GD profile ({n_iter} iters):")
-        print(f"      radon (fwd):   {t_radon_total:.2f}s "
-              f"({100 * t_radon_total / total:.0f}%)")
-        print(f"      iradon (bkp):  {t_iradon_total:.2f}s "
-              f"({100 * t_iradon_total / total:.0f}%)")
-        print(f"      arithmetic:    {t_arith_total:.2f}s "
-              f"({100 * t_arith_total / total:.0f}%)")
+        print(
+            f"      radon (fwd):   {t_radon_total:.2f}s "
+            f"({100 * t_radon_total / total:.0f}%)"
+        )
+        print(
+            f"      iradon (bkp):  {t_iradon_total:.2f}s "
+            f"({100 * t_iradon_total / total:.0f}%)"
+        )
+        print(
+            f"      arithmetic:    {t_arith_total:.2f}s "
+            f"({100 * t_arith_total / total:.0f}%)"
+        )
         print(f"      total:         {total:.2f}s")
 
     return recon
 
 
-def reconstruct_os_sart(sinogram, theta, image_shape, n_iter=50,
-                         n_subsets=10, lr=0.01, profile=False):
+def reconstruct_os_sart(
+    sinogram, theta, image_shape, n_iter=50, n_subsets=10, lr=0.01, profile=False
+):
     """Reconstruct using Ordered Subsets SART (OS-SART).
 
     Instead of using all projections per iteration (as SIRT/GD does),
@@ -205,9 +213,7 @@ def reconstruct_os_sart(sinogram, theta, image_shape, n_iter=50,
 
             # Back-project residual
             t0 = time.time()
-            gradient = iradon(
-                residual, theta=theta_sub, circle=False, filter_name=None
-            )
+            gradient = iradon(residual, theta=theta_sub, circle=False, filter_name=None)
             t_iradon_total += time.time() - t0
 
             # Update (normalise by subset size)
@@ -218,12 +224,18 @@ def reconstruct_os_sart(sinogram, theta, image_shape, n_iter=50,
     if profile:
         total = t_radon_total + t_iradon_total + t_arith_total
         print(f"    OS-SART profile ({n_iter} iters, {n_subsets} subsets):")
-        print(f"      radon (fwd):   {t_radon_total:.2f}s "
-              f"({100 * t_radon_total / total:.0f}%)")
-        print(f"      iradon (bkp):  {t_iradon_total:.2f}s "
-              f"({100 * t_iradon_total / total:.0f}%)")
-        print(f"      arithmetic:    {t_arith_total:.2f}s "
-              f"({100 * t_arith_total / total:.0f}%)")
+        print(
+            f"      radon (fwd):   {t_radon_total:.2f}s "
+            f"({100 * t_radon_total / total:.0f}%)"
+        )
+        print(
+            f"      iradon (bkp):  {t_iradon_total:.2f}s "
+            f"({100 * t_iradon_total / total:.0f}%)"
+        )
+        print(
+            f"      arithmetic:    {t_arith_total:.2f}s "
+            f"({100 * t_arith_total / total:.0f}%)"
+        )
         print(f"      total:         {total:.2f}s")
 
     return recon
@@ -282,16 +294,12 @@ def compute_metrics(ground_truth, reconstruction):
         Dictionary with ``'RMSE'``, ``'PSNR'``, and ``'SSIM'`` keys.
     """
     # Crop reconstruction to match ground truth if needed
-    recon_cropped = reconstruction[
-        :ground_truth.shape[0], :ground_truth.shape[1]
-    ]
+    recon_cropped = reconstruction[: ground_truth.shape[0], : ground_truth.shape[1]]
 
     data_range = ground_truth.max() - ground_truth.min()
     rmse = np.sqrt(np.mean((ground_truth - recon_cropped) ** 2))
     psnr_val = psnr(ground_truth, recon_cropped, data_range=data_range)
-    ssim_val = ssim(
-        ground_truth, recon_cropped, data_range=data_range, win_size=7
-    )
+    ssim_val = ssim(ground_truth, recon_cropped, data_range=data_range, win_size=7)
 
     return {"RMSE": rmse, "PSNR": psnr_val, "SSIM": ssim_val}
 
@@ -404,7 +412,7 @@ def butterworth_lowpass_filter(shape, D0=30, n=2):
     P, Q = shape[0], shape[1]
     u = np.arange(P) - P // 2
     v = np.arange(Q) - Q // 2
-    U, V = np.meshgrid(u, v, indexing='ij')
+    U, V = np.meshgrid(u, v, indexing="ij")
     D = np.sqrt(U**2 + V**2)
     H = 1 / (1 + (D / D0) ** (2 * n))
     return H

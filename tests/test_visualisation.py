@@ -37,9 +37,7 @@ class TestPlotReconstructionComparison:
                 }
             }
         }
-        plot_reconstruction_comparison(
-            results, row_params=[36], I0_levels=[1e5]
-        )
+        plot_reconstruction_comparison(results, row_params=[36], I0_levels=[1e5])
 
 
 class TestPrintMetricsTable:
@@ -88,7 +86,5 @@ class TestPlotButterworthKspace:
         """Function executes without error on small input."""
         rng = np.random.default_rng(0)
         H = np.ones((16, 16))
-        kspace = rng.standard_normal((16, 16)) + 1j * rng.standard_normal(
-            (16, 16)
-        )
+        kspace = rng.standard_normal((16, 16)) + 1j * rng.standard_normal((16, 16))
         plot_butterworth_kspace(H, kspace, kspace)

@@ -1,13 +1,12 @@
 """Plotting and visualisation utilities for CT reconstruction."""
 
-from typing import Sequence
-
 import matplotlib.pyplot as plt
 import numpy as np
 
 
-def plot_sinogram_grid(sino_dict, row_params, I0_levels, row_label="angles",
-                       title="Noisy Sinograms"):
+def plot_sinogram_grid(
+    sino_dict, row_params, I0_levels, row_label="angles", title="Noisy Sinograms"
+):
     """Plot a grid of sinograms (rows = scan parameter, cols = I0 levels).
 
     Parameters
@@ -45,8 +44,9 @@ def plot_sinogram_grid(sino_dict, row_params, I0_levels, row_label="angles",
     plt.show()
 
 
-def plot_reconstruction_comparison(results, row_params, I0_levels,
-                                   row_label="angles", title="FBP vs GD"):
+def plot_reconstruction_comparison(
+    results, row_params, I0_levels, row_label="angles", title="FBP vs GD"
+):
     """Plot side-by-side FBP and GD reconstructions with metrics.
 
     Parameters
@@ -104,8 +104,10 @@ def print_metrics_table(results, row_params, I0_levels, row_label="Angles"):
     row_label : str
         Column header for the row parameter.
     """
-    print(f"{row_label:>6} | {'I0':>8} | {'Method':>4} | "
-          f"{'RMSE':>8} | {'PSNR':>8} | {'SSIM':>8}")
+    print(
+        f"{row_label:>6} | {'I0':>8} | {'Method':>4} | "
+        f"{'RMSE':>8} | {'PSNR':>8} | {'SSIM':>8}"
+    )
     print("-" * 60)
 
     for param in row_params:
@@ -119,8 +121,9 @@ def print_metrics_table(results, row_params, I0_levels, row_label="Angles"):
                 )
 
 
-def plot_coil_grid(images, n_coils, cmap="gray", log_scale=False,
-                   title="", label="Coil"):
+def plot_coil_grid(
+    images, n_coils, cmap="gray", log_scale=False, title="", label="Coil"
+):
     """Plot a grid of per-coil 2D images.
 
     Parameters
